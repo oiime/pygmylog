@@ -60,7 +60,7 @@ fd.on('close', () => {
   pass.on('data', row => {
     console.log(row)
   })
-  psss.on('end', () => {
+  pass.on('end', () => {
     fs.unlinkSync(tmpFilename)
   })
   fs.createReadStream(tmpFilename).pipe(reader).pipe(pass)
@@ -87,8 +87,8 @@ const schema = {
   }
 }
 const writer = pygmylog.createWriteStream(schema)
+const reader = pygmylog.createReadStream()
 
-writer.pipe(reader)
 reader.on('ready', data => {
   console.log(data) // { metdata: { foo: 'bar' } }
   const pass = new PassThrough({ objectMode: true })
@@ -97,8 +97,9 @@ reader.on('ready', data => {
   })
   reader.pipe(pass)
 })
-writer.write({ foo: 5 })
 
+writer.pipe(reader)
+writer.write({ foo: 5 })
 writer.end()
 ```
 
@@ -130,14 +131,12 @@ const reader = pygmylog.createReadStream({ encoder: UselessEncoder })
 
 const pass = new PassThrough({ objectMode: true })
 pass.on('data', entry => {
-  assert.equal(entry, 'hellokitty')
+  console.log(entry) // hellokitty
 })
 
 writer.pipe(reader).pipe(pass)
-
 writer.write('hellokitty')
-
-writeRows(writer, rows)
+writer.end()
 ```
 
 
